@@ -1,0 +1,49 @@
+*************************************************
+CarLog - track your car finanses
+*************************************************
+Authors: Jadwiga Henzel & Łukasz Kowalewski
+Project run as a part of Python Programming Platfrom assigment
+
+*************************************************
+Mongo DB
+Follow instructions on mongo site - it's rather realy straightforwalrd. If you are using fedora, go with the instructions for Red Hat.
+Don't forget to set the $releasever in repo url in repo file - I set it 7, as Red Hat 7 is based on Fedora 19 and later.
+
+Instalation: dnf install mongodb-org
+Start server: service mongod start
+Server stop: service mongod stop
+
+Mongo listnes at: localhost:27017
+
+***********************************************
+Flask - rest server
+Install: pip install Flask
+Set flask app: export FLASK_APP=server.py
+Run app: flask run
+
+Your webserver runs at 127.0.0.1:5000
+
+Access-Control-Allow-Origin:
+To enable request from the same origin you need to implement a decorator (here it's @crossdomain) and  add it beneath the route decorator.
+
+***********************************************
+Http Server
+
+Install  lamp or xampp
+Set document root in /etc/httpd/conf/httpd.conf
+
+Don't forget to change the access privilages!
+Also, on Fedora, you have to enable accessing port 80 by external programs in SELinux
+
+Run: service httpd start
+
+************************************************
+brython
+
+To use brython, you need to include it in your index.html file:
+<script type="text/javascript"
+    src="https://cdn.rawgit.com/brython-dev/brython/3.2.2/www/src/brython_dist.js">
+</script>
+
+!!!
+There is issue in Brython - struct module provided in VFS lacks struct class, so I couldn't use requests library for handling http requests. The issue was reported almost a year ago, but still unresolved
