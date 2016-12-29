@@ -72,15 +72,34 @@ def get_stars():
     for s in star.find():
       output.append({'name' : s['name'], 'distance' : s['distance']})
     return jsonify({'result' : output})
+#get car all data
+@app.route('/car/<carid>',methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
+def get_cars_info(carrid):
+    cars = mongo.db.cars
+    output = []
+    for c in cars.find({'_id' : ObjectId(carid)}):
+        output.append({'model' : c['model'], 'id' : str(c['_id'])} )
+    return jsonify(output)
 
+#get all user cars
 @app.route('/user/<userid>/cars',methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
 def get_user_cars(userid):
     cars = mongo.db.cars
     output = []
-    for c in cars.find({}):
-        output.append({'model' : c['model']})
+    for c in cars.find({'userid' : ObjectId(userid)}):
+        output.append({'model' : c['model'], 'id' : str(c['_id']), 'manufacturer' : c['manufacturer']} )
     return jsonify(output)
+
+@app.route('/user/',methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
+def get_user():
+    users = mongo.db.users
+    output = []
+    for u in users.find({}):
+        output.append({'name' : u['name'], 'surname': u['surname'], 'id': str(u['_id'])} )
+    return jsonify({'user' : output})
 
 @app.route('/fillups',methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
