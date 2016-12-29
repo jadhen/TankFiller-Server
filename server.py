@@ -7,7 +7,7 @@ from flask_pymongo import PyMongo
 from datetime import timedelta
 from flask import make_response, request, current_app
 from functools import update_wrapper
-
+from bson.objectid import ObjectId
 
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
@@ -54,8 +54,8 @@ def crossdomain(origin=None, methods=None, headers=None,
 
 app = Flask(__name__)
 
-app.config['MONGO_DBNAME'] = 'stars'
-app.config['MONGO_URI'] = 'mongodb://localhost:27017/stars'
+app.config['MONGO_DBNAME'] = 'TankFiller'
+app.config['MONGO_URI'] = 'mongodb://localhost:27017/TankFiller'
 
 mongo = PyMongo(app)
 
@@ -68,6 +68,24 @@ def hello_world():
 @crossdomain(origin='*')
 def get_stars():
     star = mongo.db.stars
+    output = []
+    for s in star.find():
+      output.append({'name' : s['name'], 'distance' : s['distance']})
+    return jsonify({'result' : output})
+
+@app.route('/user/<userid>/cars',methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
+def get_user_cars(userid):
+    cars = mongo.db.cars
+    output = []
+    for c in cars.find({}):
+        output.append({'model' : c['model']})
+    return jsonify(output)
+
+@app.route('/fillups',methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
+def get_fillups():
+    car = mongo.db.Tankfiller
     output = []
     for s in star.find():
       output.append({'name' : s['name'], 'distance' : s['distance']})
