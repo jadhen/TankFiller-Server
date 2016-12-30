@@ -90,7 +90,7 @@ def get_user_cars(userid):
     output = []
     for c in cars.find({'userid' : ObjectId(userid)}):
         output.append({'model' : c['model'], 'id' : str(c['_id']), 'manufacturer' : c['manufacturer']} )
-    return jsonify(output)
+    return jsonify({'cars':output})
 
 @app.route('/user/',methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
