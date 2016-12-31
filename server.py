@@ -109,3 +109,14 @@ def get_fillups():
     for s in star.find():
       output.append({'name' : s['name'], 'distance' : s['distance']})
     return jsonify({'result' : output})
+
+
+@app.route('/car/<carid>/fillup-info',methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
+def get_car_fillups_info(carid):
+    car = mongo.db.cars
+    output = []
+    for c in car.find({"_id" : ObjectId(carid)}):
+      output.append({'model' : c['model'], 'manufacturer' : c['manufacturer'], 'mileage' : c['mileage'], 'prod_year' : c['prod_year'], 'avg_per_100' : 'xxx', 'avg_on_full_tank' :
+     'yyy'})
+    return jsonify({'info' : output})
