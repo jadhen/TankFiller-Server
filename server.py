@@ -120,3 +120,15 @@ def get_car_fillups_info(carid):
       output.append({'model' : c['model'], 'manufacturer' : c['manufacturer'], 'mileage' : c['mileage'], 'prod_year' : c['prod_year'], 'avg_per_100' : 'xxx', 'avg_on_full_tank' :
      'yyy'})
     return jsonify({'info' : output})
+
+@app.route('/car/new',methods=['POST', 'OPTIONS'])
+@crossdomain(origin='*')
+def add_new_car():
+    man = request.form['manufacturer']
+    mod = request.form['model']
+    prod = request.form['prod_year']
+    mil = request.form['mileage']
+    userid = request.form['userid']
+    car = mongo.db.cars
+    result = car.insert_one({'manufacturer' : man, 'model': mod, 'prod_year' : prod, 'mileage' : mil, 'userid' : ObjectId(userid)})
+    return jsonify({'acknowledged' : result.acknowledged, 'inserted_id' : str(result.inserted_id)})
