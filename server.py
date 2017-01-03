@@ -101,19 +101,18 @@ def get_user():
         output.append({'name' : u['name'], 'surname': u['surname'], 'id': str(u['_id'])} )
     return jsonify({'user' : output})
 
-@app.route('/fillups',methods=['GET', 'OPTIONS'])
+@app.route('/car/<carid>/fillups',methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
-def get_fillups():
-    car = mongo.db.Tankfiller
+def get_fillups(carid):
+    car = mongo.db.cars
     output = []
-    for s in star.find():
-      output.append({'name' : s['name'], 'distance' : s['distance']})
-    return jsonify({'result' : output})
+    c = car.find_one({"_id" : ObjectId(carid)})
+    return jsonify({'result' : c['fillups']})
 
 
-@app.route('/car/<carid>/fillup-info',methods=['GET', 'OPTIONS'])
+@app.route('/car/<carid>/info',methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
-def get_car_fillups_info(carid):
+def get_car_info(carid):
     car = mongo.db.cars
     output = []
     for c in car.find({"_id" : ObjectId(carid)}):
