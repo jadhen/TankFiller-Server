@@ -1,9 +1,9 @@
+""" Elo
+"""
+# -*- coding: utf-8 -*-
 from flask import Flask
 from flask import jsonify
-from flask import request
 from flask_pymongo import PyMongo
-
-# -*- coding: utf-8 -*-
 from datetime import timedelta, datetime
 from flask import make_response, request, current_app
 from functools import update_wrapper
@@ -53,6 +53,7 @@ def crossdomain(origin=None, methods=None, headers=None,
         return update_wrapper(wrapped_function, f)
     return decorator
 
+
 app = Flask(__name__)
 
 app.config['MONGO_DBNAME'] = 'TankFiller'
@@ -60,68 +61,83 @@ app.config['MONGO_URI'] = 'mongodb://localhost:27017/TankFiller'
 
 mongo = PyMongo(app)
 
+
 @app.route('/', methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
 def hello_world():
     return 'Hello, World!'
 
-@app.route('/stars',methods=['GET', 'OPTIONS'])
+
+@app.route('/stars', methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
 def get_stars():
     star = mongo.db.stars
     output = []
     for s in star.find():
-      output.append({'name' : s['name'], 'distance' : s['distance']})
-    return jsonify({'result' : output})
-#get car all data
-@app.route('/car/<carid>',methods=['GET', 'OPTIONS'])
+        output.append({'name': s['name'], 'distance': s['distance']})
+    return jsonify({'result': output})
+# get car all data
+
+
+@app.route('/car/<carid>', methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
-def get_cars_info(carrid):
+def get_cars_info(carid):
     cars = mongo.db.cars
     output = []
-    for c in cars.find({'_id' : ObjectId(carid)}):
-        output.append({'model' : c['model'], 'id' : str(c['_id'])} )
+    for c in cars.find({'_id': ObjectId(carid)}):
+        output.append({'model': c['model'], 'id': str(c['_id'])})
     return jsonify(output)
 
-#get all user cars
-@app.route('/user/<userid>/cars',methods=['GET', 'OPTIONS'])
+
+# get all user cars
+@app.route('/user/<userid>/cars', methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
 def get_user_cars(userid):
     cars = mongo.db.cars
     output = []
-    for c in cars.find({'userid' : ObjectId(userid)}):
-        output.append({'model' : c['model'], 'id' : str(c['_id']), 'manufacturer' : c['manufacturer']} )
-    return jsonify({'cars':output})
+    for c in cars.find({'userid': ObjectId(userid)}):
+        output.append({
+            'model': c['model'], 'id': str(c['_id']),
+            'manufacturer': c['manufacturer']})
+    return jsonify({'cars': output})
 
-@app.route('/user/',methods=['GET', 'OPTIONS'])
+
+@app.route('/user/', methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
 def get_user():
     users = mongo.db.users
     output = []
     for u in users.find({}):
-        output.append({'name' : u['name'], 'surname': u['surname'], 'id': str(u['_id'])} )
-    return jsonify({'user' : output})
+        output.append({
+            'name': u['name'], 'surname': u['surname'],
+            'id': str(u['_id'])})
+    return jsonify({'user': output})
 
-@app.route('/car/<carid>/fillups',methods=['GET', 'OPTIONS'])
+
+@app.route('/car/<carid>/fillups', methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
 def get_fillups(carid):
     car = mongo.db.cars
-    output = []
-    c = car.find_one({"_id" : ObjectId(carid)})
-    return jsonify({'result' : c['fillups']})
+    c = car.find_one({"_id": ObjectId(carid)})
+    if 'fillups' not in c:
+        return jsonify({'result': []})
+    return jsonify({'result': c['fillups']})
 
 
-@app.route('/car/<carid>/info',methods=['GET', 'OPTIONS'])
+@app.route('/car/<carid>/info', methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
 def get_car_info(carid):
     car = mongo.db.cars
     output = []
-    for c in car.find({"_id" : ObjectId(carid)}):
-      output.append({'model' : c['model'], 'manufacturer' : c['manufacturer'], 'mileage' : c['mileage'], 'prod_year' : c['prod_year'], 'avg_per_100' : 'xxx', 'avg_on_full_tank' :
-     'yyy'})
-    return jsonify({'info' : output})
+    for c in car.find({"_id": ObjectId(carid)}):
+        output.append({
+            'model': c['model'], 'manufacturer': c['manufacturer'],
+            'mileage': c['mileage'], 'prod_year': c['prod_year'],
+            'avg_per_100': '5.4', 'avg_on_full_tank': '222'})
+    return jsonify({'info': output})
 
-@app.route('/car/new',methods=['POST', 'OPTIONS'])
+
+@app.route('/car/new', methods=['POST', 'OPTIONS'])
 @crossdomain(origin='*')
 def add_new_car():
     man = request.form['manufacturer']
@@ -130,10 +146,15 @@ def add_new_car():
     mil = request.form['mileage']
     userid = request.form['userid']
     car = mongo.db.cars
-    result = car.insert_one({'manufacturer' : man, 'model': mod, 'prod_year' : prod, 'mileage' : mil, 'userid' : ObjectId(userid)})
-    return jsonify({'acknowledged' : result.acknowledged, 'inserted_id' : str(result.inserted_id)})
+    result = car.insert_one({
+        'manufacturer': man, 'model': mod, 'prod_year': prod, 'mileage': mil,
+        'userid': ObjectId(userid)})
+    return jsonify({
+        'acknowledged': result.acknowledged,
+        'inserted_id': str(result.inserted_id)})
 
-@app.route('/car/fillup/new',methods=['POST', 'OPTIONS'])
+
+@app.route('/car/fillup/new', methods=['POST', 'OPTIONS'])
 @crossdomain(origin='*')
 def add_new_fillup():
     km = request.form['driven_km']
@@ -143,6 +164,15 @@ def add_new_fillup():
     carid = request.form['carid']
     full = request.form['fulltank']
     car = mongo.db.cars
-    car.update_one({'_id' : ObjectId(carid) }, {'$inc': {'mileage': float(km)}})
-    result = car.update_one({'_id' : ObjectId(carid) }, { '$push': {  'fillups': { '$each': [ { 'date' :datetime.strptime(date, "%Y-%m-%d"), 'liters' : lit, 'driven_km' : km, 'per_liter' : pr , 'fullTank' : full }],'$sort': { 'date': 1 }}}})
-    return jsonify({'acknowledged' : result.acknowledged, 'modified_count' : result.modified_count})
+    car.update_one(
+        {'_id': ObjectId(carid)},
+        {'$inc': {'mileage': float(km)}})
+    result = car.update_one(
+        {'_id': ObjectId(carid)},
+        {'$push': {'fillups': {'$each':
+         [{'date': datetime.strptime(date, "%Y-%m-%d"), 'liters': lit,
+          'driven_km': km, 'per_liter': pr, 'fullTank': full}], '$sort':
+          {'date': 1}}}})
+    return jsonify({
+        'acknowledged': result.acknowledged,
+        'modified_count': result.modified_count})
