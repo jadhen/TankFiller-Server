@@ -176,3 +176,13 @@ def add_new_fillup():
     return jsonify({
         'acknowledged': result.acknowledged,
         'modified_count': result.modified_count})
+
+
+@app.route('/car/<carid>/repairs', methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
+def get_car_repairs(carid):
+    car = mongo.db.cars
+    c = car.find_one({"_id": ObjectId(carid)})
+    if 'fillups' not in c:
+        return jsonify({'result': []})
+    return jsonify({'result': c['repairs']})
