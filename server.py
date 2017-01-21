@@ -4,12 +4,13 @@
 from flask import Flask
 from flask import jsonify
 from flask_pymongo import PyMongo
-from datetime import timedelta, datetime, date
+from datetime import timedelta, datetime
 from flask import make_response, request, current_app
 from functools import update_wrapper
 from bson.objectid import ObjectId
 from tf_util import datetime_2_js_date
 from dateutil.relativedelta import relativedelta
+
 
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
@@ -223,3 +224,14 @@ def get_car_repairs(carid):
     if 'repairs' not in c:
         return jsonify({'result': []})
     return jsonify({'result': c['repairs']})
+
+
+@app.route('/repairs_dict', methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
+def get_repairs_dict():
+    output = []
+    repairs_dict = mongo.db.repairs_dict
+    dict = repairs_dict.find({})
+    for repair in dict:
+        output.append({'name': repair['name'], 'frequency': repair['frequency']})
+    return jsonify({'dict': output})
