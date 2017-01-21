@@ -4,11 +4,12 @@
 from flask import Flask
 from flask import jsonify
 from flask_pymongo import PyMongo
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 from flask import make_response, request, current_app
 from functools import update_wrapper
 from bson.objectid import ObjectId
-
+from tf_util import datetime_2_js_date
+from dateutil.relativedelta import relativedelta
 
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
@@ -161,6 +162,7 @@ def add_new_fillup():
     pr = request.form['price']
     lit = request.form['liters']
     date = request.form['date']
+    date = datetime.strptime(date, "%Y-%m-%d")
     carid = request.form['carid']
     full = request.form['fulltank']
     car = mongo.db.cars
@@ -170,12 +172,41 @@ def add_new_fillup():
     result = car.update_one(
         {'_id': ObjectId(carid)},
         {'$push': {'fillups': {'$each':
-         [{'date': datetime.strptime(date, "%Y-%m-%d"), 'liters': lit,
-          'driven_km': km, 'per_liter': pr, 'fullTank': full}], '$sort':
-          {'date': 1}}}})
+         [{'date': datetime_2_js_date(date.year, date.month, date.day),
+          'liters': lit, 'driven_km': km, 'per_liter': pr, 'fullTank': full}],
+          '$sort': {'date': 1}}}})
     return jsonify({
         'acknowledged': result.acknowledged,
         'modified_count': result.modified_count})
+
+
+def soon(t1, t2):
+    today = datetime.today()
+    days_between_repairs = (t2 - t1).days
+    days_elapsed = (today - t1).days
+    if days_elapsed < 0.9*days_between_repairs:
+        return False
+    else:
+        return True
+
+
+def repair_status(date, frequency):
+    date = date.replace(tzinfo=None)
+    today = datetime.today()
+    next_repair_date = (date + relativedelta(years=frequency)).replace(tzinfo=None)
+    if next_repair_date < today:
+        return "danger"
+    elif soon(date, next_repair_date):
+        return "warning"
+    return "success"
+
+
+def repair_info(name, freq):
+    if freq == 1:
+        info = "year"
+    else:
+        info = str(freq) + " years"
+    return name + " should be replaced every " + info
 
 
 @app.route('/car/<carid>/repairs', methods=['GET', 'OPTIONS'])
@@ -183,6 +214,12 @@ def add_new_fillup():
 def get_car_repairs(carid):
     car = mongo.db.cars
     c = car.find_one({"_id": ObjectId(carid)})
-    if 'fillups' not in c:
+    for r in c['repairs']:
+        name = r['type']['name']
+        freq = r['type']['frequency']
+        r['status'] = repair_status(r['date'], freq)
+        r['date'] = r['date'].strftime("%d-%m-%y")
+        r['info'] = repair_info(name, freq)
+    if 'repairs' not in c:
         return jsonify({'result': []})
     return jsonify({'result': c['repairs']})
