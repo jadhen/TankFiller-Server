@@ -132,11 +132,21 @@ def get_car_info(carid):
     car = mongo.db.cars
     output = []
     for c in car.find({"_id": ObjectId(carid)}):
+        avg_per_100 = count_average(c)
         output.append({
             'model': c['model'], 'manufacturer': c['manufacturer'],
             'mileage': c['mileage'], 'prod_year': c['prod_year'],
-            'avg_per_100': '5.4', 'avg_on_full_tank': '222'})
+            'avg_per_100': avg_per_100, 'avg_on_full_tank': '222'})
     return jsonify({'info': output})
+
+
+def count_average(car):
+    liters_sum = 0
+    km_sum = 0
+    for f in car['fillups']:
+        liters_sum = liters_sum + float(f['liters'])
+        km_sum = km_sum + float(f['driven_km'])
+    return (liters_sum*100)/km_sum
 
 
 @app.route('/car/<carid>/name', methods=['GET', 'OPTIONS'])
