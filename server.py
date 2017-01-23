@@ -160,8 +160,8 @@ def add_new_car():
     userid = request.form['userid']
     car = mongo.db.cars
     result = car.insert_one({
-        'manufacturer': man, 'model': mod, 'prod_year': prod, 'mileage': mil,
-        'userid': ObjectId(userid)})
+        'manufacturer': man, 'model': mod, 'prod_year': prod, 'mileage': int(mil),
+        'userid': ObjectId(userid), 'repairs': [], 'fillups': []})
     return jsonify({
         'acknowledged': result.acknowledged,
         'inserted_id': str(result.inserted_id)})
