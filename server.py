@@ -150,7 +150,6 @@ def get_car_name(carid):
     return jsonify({'info': output})
 
 
-
 @app.route('/car/new', methods=['POST', 'OPTIONS'])
 @crossdomain(origin='*')
 def add_new_car():
@@ -238,16 +237,31 @@ def get_car_repairs(carid):
     return jsonify({'result': c['repairs']})
 
 
-@app.route('/repairs_dict', methods=['GET', 'OPTIONS'])
+@app.route('/<carid>/repairs_dict', methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
-def get_repairs_dict():
+def get_repairs_dict(carid):
     output = []
     repairs_dict = mongo.db.repairs_dict
+    car_repairs = get_cars_done_repairs_name(carid)
     dict = repairs_dict.find({})
     for repair in dict:
         output.append({'name': repair['name'],
-                       'frequency': repair['frequency']})
+                       'frequency': repair['frequency'],
+                       'already_done': repair_done(repair, car_repairs)})
     return jsonify(output)
+
+
+def get_cars_done_repairs_name(carid):
+    car = mongo.db.cars
+    car_repairs = car.find_one({"_id": ObjectId(carid)})['repairs']
+    output = []
+    for r in car_repairs:
+        output.append(r['type']['name'])
+    return output
+
+
+def repair_done(repair, repairs_list):
+    return repair['name'] in repairs_list
 
 
 @app.route('/car/repair/new', methods=['POST', 'OPTIONS'])
