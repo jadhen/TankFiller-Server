@@ -228,9 +228,9 @@ def get_car_repairs(carid):
     c = car.find_one({"_id": ObjectId(carid)})
     for r in c['repairs']:
         name = r['type']['name']
-        freq = r['type']['frequency']
+        freq = int(r['type']['frequency'])
         r['status'] = repair_status(r['date'], freq)
-        r['date'] = r['date'].strftime("%d-%m-%y")
+        r['date'] = r['date'].strftime("%Y-%m-%d")
         r['info'] = repair_info(name, freq)
     if 'repairs' not in c:
         return jsonify({'result': []})
@@ -283,3 +283,23 @@ def add_new_repair():
     return jsonify({
         'acknowledged': result.acknowledged,
         'modified_count': result.modified_count})
+
+
+@app.route('/car/repair/update', methods=['POST', 'OPTIONS'])
+@crossdomain(origin='*')
+def update_repair():
+    pr = request.form['price']
+    date = request.form['date']
+    date = datetime.strptime(date, "%Y-%m-%d")
+    carid = request.form['carid']
+    name = request.form['name']
+    car = mongo.db.cars
+    result = car.update_one(
+        {'_id': ObjectId(carid), 'repairs.type.name': name},
+        {'$set': {"repairs.$.price": pr, "repairs.$.date": date}})
+    return jsonify({
+        'acknowledged': result.acknowledged,
+        'modified_count': result.modified_count})
+
+
+#db.cars.update({"model":"Clio 1","repairs.type.name":"Clutch"}, {$set: {"repairs.$.price" : 10}})
