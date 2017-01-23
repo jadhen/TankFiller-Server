@@ -139,6 +139,18 @@ def get_car_info(carid):
     return jsonify({'info': output})
 
 
+@app.route('/car/<carid>/name', methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
+def get_car_name(carid):
+    car = mongo.db.cars
+    output = []
+    for c in car.find({"_id": ObjectId(carid)}):
+        output.append({
+            'model': c['model'], 'manufacturer': c['manufacturer']})
+    return jsonify({'info': output})
+
+
+
 @app.route('/car/new', methods=['POST', 'OPTIONS'])
 @crossdomain(origin='*')
 def add_new_car():
@@ -233,5 +245,27 @@ def get_repairs_dict():
     repairs_dict = mongo.db.repairs_dict
     dict = repairs_dict.find({})
     for repair in dict:
-        output.append({'name': repair['name'], 'frequency': repair['frequency']})
-    return jsonify({'dict': output})
+        output.append({'name': repair['name'],
+                       'frequency': repair['frequency']})
+    return jsonify(output)
+
+
+@app.route('/car/repair/new', methods=['POST', 'OPTIONS'])
+@crossdomain(origin='*')
+def add_new_repair():
+    pr = request.form['price']
+    date = request.form['date']
+    date = datetime.strptime(date, "%Y-%m-%d")
+    carid = request.form['carid']
+    name = request.form['name']
+    freq = request.form['frequency']
+    car = mongo.db.cars
+    result = car.update_one(
+        {'_id': ObjectId(carid)},
+        {'$push': {'repairs': {'$each':
+         [{'date': date,
+          'price': pr, 'type': {'name': name, 'frequency': int(freq)}}],
+          '$sort': {'date': -1}}}})
+    return jsonify({
+        'acknowledged': result.acknowledged,
+        'modified_count': result.modified_count})
